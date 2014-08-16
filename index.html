@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+</head>
+<body>
+<div id="background" style="width: 600px; height: 40px; background-color: #000;margin: 30px auto;">
+    <div id="zone" style="width: 200px; height: 40px; background-color: #ff9a22; margin-left: 200px; position: absolute;"></div>
+    <div id="slider" style="width: 10px; height: 40px; background-color: #ff0013; margin-left: 0px; position: absolute;"></div>
+</div>
+<div id="button" style="margin: 0 auto;width: 200px; height: 200px;display: block; background-color: #0eff03; text-align: center; font-size: 30px;">CLICK ME</div>
+<hr />
+<div style="width: 400px; margin: 0 auto;">
+    Current speed: <span id="currentSpeed">5</span><br />
+    <label for="curveCoefficient">Speed curve coefficient:</label>
+    <input id="curveCoefficient" name="curveCoefficient" type="text" value="5"/><br />
+    <label for="timing">Ticker timing:</label>
+    <input id="timing" name="timing" type="text" value="5"/><br />
+    <label for="animateTiming">Animation timing:</label>
+    <input id="animateTiming" name="animateTiming" type="text" value="4"/><br />
+    <label for="randBaseStep">Random minimal speed:</label>
+    <input id="randBaseStep" name="randBaseStep" type="checkbox" checked="checked" /><br />
+    <label for="baseStep">Minimal speed (only with disabled random):</label>
+    <input id="baseStep" name="baseStep" type="text" value="5"/><br />
+</div>
+<script type="text/javascript">
+    $(function() {
+initialize();
+        function initialize()
+        {
+            $('#button').text("CLICK ME");
+
+            var timing = parseInt($("#timing").val());
+
+            var direction = '+';
+
+            var slider = $('#slider');
+            slider.css('marginLeft', 0);
+            var total = parseInt($('#background').css('width')) - parseInt(slider.css('width'));
+            var center = total / 2;
+            var special = (total/parseInt($("#curveCoefficient").val()));
+            var x = 1;
+
+            var stopped = false;
+
+            $('#button').click(function(){
+                if(stopped)
+                {
+                    window.location.reload();
+                    return;
+                }
+                stopped = true;
+                slider.stop();
+                clearTimeout(tid);
+
+                var progress = parseInt(slider.css('marginLeft'));
+                if(progress < center)
+                {
+                    x = progress;
+                }
+                else
+                {
+                    x = (total - progress);
+                }
+                var accuracy = Math.ceil(x/center*100);
+                $('#button').text("Accuracy: "+accuracy+"%");
+            });
+
+            var tid = setInterval(tick, timing);
+
+
+            function tick()
+            {
+                window.clearTimeout(tid);
+
+                var progress = parseInt(slider.css('marginLeft'));
+                var animateTiming = parseInt($("#animateTiming").val());
+                var baseStep = parseInt($("#baseStep").val());
+
+                timing = parseInt($("#timing").val());
+
+                if(progress <= 0)
+                {
+                    direction = '+';
+
+                    special = (total/parseInt($("#curveCoefficient").val()));
+
+                    console.log(parseInt($("#curveCoefficient").val()));
+                    console.log(special);
+
+                    if($('#randBaseStep').prop('checked'))
+                    {
+                        baseStep = Math.ceil(Math.random() * 13) + 3;
+                        $("#baseStep").val(baseStep);
+                    }
+                }
+                else if(progress >= total)
+                {
+                    direction = '-';
+                }
+
+                var step = baseStep;
+
+                if(progress < center)
+                {
+                    x = progress;
+                }
+                else
+                {
+                    x = (total - progress);
+                }
+
+                var x_function = Math.pow((x*2/special), 2);
+                step = step + x_function / 2;
+
+                slider.animate({
+                    marginLeft: direction+'='+step+'px'
+                }, animateTiming, false, function()
+                {
+                    if(!stopped)
+                    {
+                        tid = setInterval(tick, timing);
+                    }
+                    $('#currentSpeed').text(step);
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>
